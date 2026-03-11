@@ -25,7 +25,7 @@ export function verifyToken(token: string): JwtPayload | null {
 
 export function setAuthCookie(res: Response, token: string): void {
   res.cookie('auth_token', token, {
-  httpOnly: true,
+  httpOnly: false,
   secure: true, // MUST be true for sameSite: 'none'
   sameSite: 'none', 
   maxAge: 7 * 24 * 60 * 60 * 1000
