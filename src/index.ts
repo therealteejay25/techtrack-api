@@ -37,7 +37,8 @@ const corsOptions = {
     // Allow your production domains
     const allowedOrigins = [
       FRONTEND_URL,
-      'https://your-frontend-domain.com', // Replace with your actual domain
+      'https://techtrack01.vercel.app', // Your Vercel domain
+      'https://techtrack-api.onrender.com', // Your Render backend domain
       'http://localhost:3000',
       'https://localhost:3000'
     ];
