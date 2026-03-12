@@ -16,13 +16,53 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
+// Enhanced CORS configuration for HTTPS
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    console.log('CORS Origin:', origin); // Debug logging
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow the configured frontend URL
+    if (origin === FRONTEND_URL) {
+      return callback(null, true);
+    }
+    
+    // In development, allow localhost with any port
+    if (process.env.NODE_ENV === 'development' && origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    
+    // Allow your production domains
+    const allowedOrigins = [
+      FRONTEND_URL,
+      'https://your-frontend-domain.com', // Replace with your actual domain
+      'http://localhost:3000',
+      'https://localhost:3000'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    console.log('CORS blocked origin:', origin); // Debug logging
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie']
+};
+
 // Middleware
-app.use(cors({
-  origin: FRONTEND_URL,
-  credentials: true
-}));
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 app.use(cookieParser());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Increased limit for logo uploads
 
 // Routes
 app.use('/api/auth', authRouter);
@@ -36,7 +76,16 @@ app.use('/api/organization', organizationRouter);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isHttps = process.env.HTTPS === 'true' || isProduction;
+  
+  res.json({ 
+    status: 'ok',
+    environment: process.env.NODE_ENV || 'development',
+    https: isHttps,
+    frontendUrl: FRONTEND_URL,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Global error handler
