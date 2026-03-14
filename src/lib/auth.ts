@@ -25,35 +25,26 @@ export function verifyToken(token: string): JwtPayload | null {
 
 export function setAuthCookie(res: Response, token: string): void {
   const isProduction = process.env.NODE_ENV === 'production';
-  const isHttps = process.env.HTTPS === 'true' || isProduction;
-  
+
   const cookieOptions = {
     httpOnly: true,
-    secure: true, // Must be true for HTTPS
-    sameSite: 'none', // Use 'none' for HTTPS cross-domain, 'lax' for HTTP
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    // path: '/', // Ensure cookie is available for all paths
-    // domain: undefined // Let browser handle domain automatically
+    secure: isProduction,          // true in prod (HTTPS), false in local dev (HTTP)
+    sameSite: 'none' as const,     // ✅ 'as const' fixes TypeScript type inference
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: '/',
   };
-  
-  console.log('Setting auth cookie with options:', cookieOptions); // Debug logging
-  console.log('Environment - Production:', isProduction, 'HTTPS:', isHttps);
-  console.log('Request origin:', res.req?.headers?.origin);
-  
+
+  console.log('Setting auth cookie | production:', isProduction, '| origin:', res.req?.headers?.origin);
   res.cookie('auth_token', token, cookieOptions);
 }
 
 export function clearAuthCookie(res: Response): void {
   const isProduction = process.env.NODE_ENV === 'production';
-  const isHttps = process.env.HTTPS === 'true' || isProduction;
-  
-  const cookieOptions = {
+
+  res.clearCookie('auth_token', {
     httpOnly: true,
-    secure: isHttps,
-    sameSite: isHttps ? 'none' as const : 'lax' as const,
+    secure: isProduction,          // ✅ Must match exactly what was set
+    sameSite: 'none' as const,
     path: '/',
-    domain: undefined
-  };
-  
-  res.clearCookie('auth_token', cookieOptions);
+  });
 }
