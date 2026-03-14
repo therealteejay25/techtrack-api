@@ -29,15 +29,16 @@ export function setAuthCookie(res: Response, token: string): void {
   
   const cookieOptions = {
     httpOnly: true,
-    secure: isHttps, // Must be true for HTTPS
-    sameSite: 'none' as const, // Required for cross-domain cookies in production
+    secure: true, // Must be true for HTTPS
+    sameSite: 'none', // Use 'none' for HTTPS cross-domain, 'lax' for HTTP
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    path: '/', // Ensure cookie is available for all paths
-    domain: undefined // Let browser handle domain automatically
+    // path: '/', // Ensure cookie is available for all paths
+    // domain: undefined // Let browser handle domain automatically
   };
   
   console.log('Setting auth cookie with options:', cookieOptions); // Debug logging
   console.log('Environment - Production:', isProduction, 'HTTPS:', isHttps);
+  console.log('Request origin:', res.req?.headers?.origin);
   
   res.cookie('auth_token', token, cookieOptions);
 }
@@ -49,7 +50,7 @@ export function clearAuthCookie(res: Response): void {
   const cookieOptions = {
     httpOnly: true,
     secure: isHttps,
-    sameSite: 'none' as const,
+    sameSite: isHttps ? 'none' as const : 'lax' as const,
     path: '/',
     domain: undefined
   };

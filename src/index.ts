@@ -24,16 +24,6 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    // Allow the configured frontend URL
-    if (origin === FRONTEND_URL) {
-      return callback(null, true);
-    }
-    
-    // In development, allow localhost with any port
-    if (process.env.NODE_ENV === 'development' && origin.includes('localhost')) {
-      return callback(null, true);
-    }
-    
     // Allow your production domains
     const allowedOrigins = [
       FRONTEND_URL,
@@ -42,6 +32,11 @@ const corsOptions = {
       'http://localhost:3000',
       'https://localhost:3000'
     ];
+    
+    // In development, allow localhost with any port
+    if (process.env.NODE_ENV === 'development' && origin && origin.includes('localhost')) {
+      return callback(null, true);
+    }
     
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
@@ -52,8 +47,10 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+  exposedHeaders: ['Set-Cookie'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 // Middleware
